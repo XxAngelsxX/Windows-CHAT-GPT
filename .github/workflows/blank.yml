@@ -1,0 +1,39 @@
+
+name: Diagnostico Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnostico:
+    runs-on: windows-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Informacoes do computador
+        shell: pwsh
+        run: |
+          Write-Host "=== PROCESSADOR ==="
+          Get-CimInstance Win32_Processor |
+            Select-Object Name, NumberOfCores,
+              NumberOfLogicalProcessors
+
+          Write-Host "=== MEMORIA RAM ==="
+          $ram = Get-CimInstance Win32_ComputerSystem
+          "{0:N2} GB" -f ($ram.TotalPhysicalMemory / 1GB)
+
+          Write-Host "=== PLACA DE VIDEO ==="
+          Get-CimInstance Win32_VideoController |
+            Select-Object Name, AdapterRAM
+
+          Write-Host "=== ARMAZENAMENTO ==="
+          Get-PSDrive -PSProvider FileSystem |
+            Select-Object Name, Used, Free
+
+          Write-Host "=== NVIDIA ==="
+          if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
+            nvidia-smi
+          } else {
+            Write-Host "nvidia-smi nao encontrado"
+          }
+          
